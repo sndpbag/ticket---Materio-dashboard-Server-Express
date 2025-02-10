@@ -69,7 +69,8 @@ app.post('/tickets', async (req, res) => {
 
   console.log(req.body);
   try {
-    const { title, description, priority, category, contactEmail, phone, date } = req.body;
+    const { title, description, priority, category, contactEmail, phone,attachment, date,agreeTerms,ticketType
+    } = req.body;
     
     if (!title || !description || !contactEmail) {
       return res.status(400).json({ message: 'Title, Description, and Email are required' });
@@ -84,6 +85,9 @@ app.post('/tickets', async (req, res) => {
       category,
       contactEmail,
       phone,
+      agreeTerms,
+      ticketType,
+      attachment,
       date: date || new Date().toISOString(),
       // createdAt: admin.firestore.FieldValue.serverTimestamp(),
       
@@ -161,14 +165,55 @@ app.get('/ticket-show/:id', async (req, res) => {
       return res.status(404).json({ error: "Ticket not found" });
     }
 
-    console.log("Fetched ticket:", doc.data());
+    const ticketData = doc.data();
+    ticketData.id = doc.id; // Manually add the ID to the response
 
-    return res.json(doc.data()); // Return only the document data
+    // console.log("Fetched ticket:", ticketData);
+
+    return res.json(ticketData); // Return only the document data
   } catch (error) {
     console.error("Error fetching ticket:", error);
     return res.status(500).json({ error: error.message });
   }
 });
+
+//  update ticket
+app.put('/ticket-update',async(req,res)=>{
+   
+try {
+  const { id, ...updateData } = req.body; // Extract ID separately
+ 
+
+  if(!id)
+  {
+    return res.status(400).json({message: 'ID is required to update ticket'});
+
+  }
+
+  const ticketRef =  db.collection('tickets').doc(id);
+  const ticketDoc = await ticketRef.get();
+  console.log(ticketDoc);
+
+  if(!ticketDoc.exists)
+  {
+    return res.status(404).json({message: 'Ticket  Not Found'});
+  }
+
+  await ticketRef.update(updateData); // Update only the provided fields
+
+  return res.status(200).json({message: 'Ticket Update Successfully', updateData })
+
+} catch (error) {
+
+ 
+  return res.status(500).json({ error:error });
+  
+}
+
+ 
+  
+  
+})
 
 
   
